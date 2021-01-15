@@ -87,6 +87,8 @@ jobs:
     - name: Build packages
       run: ./vcpkg install --clean-after-build ${{ env.VCPKG_PACKAGES }}
       working-directory: ${{ matrix.vcpkg_path }}
+      env:
+        VCPKG_OVERLAY_PORTS: overlay/ports
 
     - name: Upload GitHub Actions artifacts of failed build
       if: failure()
