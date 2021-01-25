@@ -116,7 +116,7 @@ jobs:
         VCPKG_BINARY_SOURCES: ${{ env.VCPKG_BINARY_SOURCES }}
 
     - name: Upload GitHub Actions artifacts of failed build
-      if: failure()
+      if: always()
       uses: actions/upload-artifact@v2
       with:
         name: logs-${{ matrix.os }}
