@@ -344,6 +344,9 @@ namespace vcpkg::Build
                        "for more information.\n");
         Checks::exit_maybe_upgrade(VCPKG_LINE_INFO);
 #else
+        (void)target_architecture;
+        (void)toolset;
+        (void)all_toolsets;
         Checks::exit_with_message(VCPKG_LINE_INFO,
                                   "Error: vcvars-based toolchains are only usable on Windows platforms.");
 #endif
@@ -983,7 +986,8 @@ namespace vcpkg::Build
 
         const auto& abi_info = action.abi_info.value_or_exit(VCPKG_LINE_INFO);
         const auto& triplet_abi = paths.get_triplet_info(abi_info);
-        abi_tag_entries.emplace_back("triplet", triplet_abi);
+        abi_tag_entries.emplace_back("triplet", triplet.canonical_name());
+        abi_tag_entries.emplace_back("triplet_abi", triplet_abi);
         abi_entries_from_abi_info(abi_info, abi_tag_entries);
 
         // If there is an unusually large number of files in the port then

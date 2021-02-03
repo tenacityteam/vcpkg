@@ -681,6 +681,7 @@ TEST_CASE ("Serialize all the ports", "[manifests]")
     std::vector<std::string> args_list = {"format-manifest"};
     auto& fs = Files::get_real_filesystem();
     auto args = VcpkgCmdArguments::create_from_arg_sequence(args_list.data(), args_list.data() + args_list.size());
+    args.imbue_from_environment();
     VcpkgPaths paths{fs, args};
 
     std::vector<SourceControlFile> scfs;
@@ -691,13 +692,21 @@ TEST_CASE ("Serialize all the ports", "[manifests]")
         const auto manifest = dir / fs::u8path("vcpkg.json");
         if (fs.exists(control))
         {
+            INFO(fs::u8string(control));
             auto contents = fs.read_contents(control, VCPKG_LINE_INFO);
             auto pghs = Paragraphs::parse_paragraphs(contents, fs::u8string(control));
             REQUIRE(pghs);
 
-            scfs.push_back(std::move(*SourceControlFile::parse_control_file(
-                                          fs::u8string(control), std::move(pghs).value_or_exit(VCPKG_LINE_INFO))
-                                          .value_or_exit(VCPKG_LINE_INFO)));
+            auto scf = SourceControlFile::parse_control_file(fs::u8string(control),
+                                                             std::move(pghs).value_or_exit(VCPKG_LINE_INFO));
+            if (!scf)
+            {
+                INFO(scf.error()->name);
+                INFO(scf.error()->error);
+                REQUIRE(scf);
+            }
+
+            scfs.push_back(std::move(*scf.value_or_exit(VCPKG_LINE_INFO)));
         }
         else if (fs.exists(manifest))
         {
