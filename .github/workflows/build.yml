@@ -25,6 +25,7 @@ jobs:
         angle
         chromaprint
         ffmpeg
+        fdk-aac
         fftw3
         hidapi
         hss1394
