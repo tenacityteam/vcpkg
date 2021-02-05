@@ -82,9 +82,9 @@ jobs:
       uses: actions/cache@v2
       with:
         path: ${{ matrix.vcpkg_cache }}
-        key: vcpkg-${{ matrix.vcpkg_triplet }}-${{ github.run_number }}
+        key: vcpkg-installed-${{ matrix.vcpkg_triplet }}-${{ github.run_number }}
         restore-keys: |
-          vcpkg-${{ matrix.vcpkg_triplet }}-
+          vcpkg-installed-${{ matrix.vcpkg_triplet }}-
 
     - name: Check available disk space
       run: ${{ matrix.check_disk_space }}
