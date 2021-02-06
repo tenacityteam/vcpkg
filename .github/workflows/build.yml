@@ -12,7 +12,7 @@ jobs:
             vcpkg_path: C:\mixxx-vcpkg
             vcpkg_bootstrap: .\bootstrap-vcpkg.bat
             vcpkg_triplet: x64-windows
-            vcpkg_cache: C:\Users\runneradmin\AppData\Local\vcpkg\archives
+            vcpkg_cache: 'C:\Users\runneradmin\AppData\Local\vcpkg\archives'
             check_disk_space: Get-PSDrive
             #- os: macos-10.15
             #  vcpkg_path: /Users/runner/mixxx-vcpkg
