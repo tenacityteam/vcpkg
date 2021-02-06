@@ -52,7 +52,7 @@ jobs:
       run: ${{ matrix.check_disk_space }}
 
     - name: Build packages
-      run: ./vcpkg install --clean-after-build ${{ env.VCPKG_PACKAGES }}
+      run: ./vcpkg upgrade --no-dry-run && ./vcpkg install --clean-after-build ${{ env.VCPKG_PACKAGES }}
       working-directory: ${{ matrix.vcpkg_path }}
       env:
         VCPKG_OVERLAY_PORTS: overlay/ports
