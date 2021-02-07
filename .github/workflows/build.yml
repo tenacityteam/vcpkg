@@ -111,7 +111,7 @@ jobs:
       env:
         SSH_PASSWORD: ${{ secrets.DOWNLOADS_HOSTGATOR_DOT_MIXXX_DOT_ORG_KEY_PASSWORD }}
       run: |
-        $Env:PATH="$Env:PATH;C:\msys64\usr\bin"
+        $Env:PATH="C:\msys64\usr\bin;$Env:PATH"
         pacman -S --noconfirm coreutils bash rsync openssh
         Add-Content -Path "$Env:GITHUB_ENV" -Value "PATH=$Env:PATH"
 
@@ -133,3 +133,9 @@ jobs:
       with:
         name: mixxx-dependencies-${{ env.MIXXX_VERSION }}-${{ matrix.vcpkg_triplet }}-${{ github.sha }}
         path: ${{ matrix.vcpkg_path }}/mixxx-dependencies-${{ env.MIXXX_VERSION }}-${{ matrix.vcpkg_triplet }}-${{ github.sha }}.zip
+
+    # Workaround for https://github.com/actions/cache/issues/531
+    - name: Use GNU tar from Git For Windows & zstd from Chocolatey for caching
+      shell: bash
+      run: |
+        echo "C:/Program Files/Git/usr/bin;C:/ProgramData/Chocolatey/bin" >> $GITHUB_PATH
