@@ -78,7 +78,7 @@ jobs:
       run: brew install yasm automake
 
     - name: Set up cache
-      uses: actions/cache@v2
+      uses: actions/cache@v1
       with:
         path: ${{ matrix.vcpkg_path }}/installed
         key: vcpkg-installed-${{ matrix.vcpkg_triplet }}-${{ github.ref }}-${{ github.run_number }}
