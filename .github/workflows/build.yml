@@ -78,7 +78,7 @@ jobs:
       run: brew install yasm automake
 
     - name: Set up cache
-      uses: actions/cache@v1
+      uses: actions/cache@v2
       with:
         path: ${{ matrix.vcpkg_path }}/installed
         key: vcpkg-installed-${{ matrix.vcpkg_triplet }}-${{ github.ref }}-${{ github.run_number }}
@@ -111,7 +111,7 @@ jobs:
       env:
         SSH_PASSWORD: ${{ secrets.DOWNLOADS_HOSTGATOR_DOT_MIXXX_DOT_ORG_KEY_PASSWORD }}
       run: |
-        $Env:PATH="C:\msys64\usr\bin;$Env:PATH"
+        $Env:PATH="$Env:PATH;C:\msys64\usr\bin"
         pacman -S --noconfirm coreutils bash rsync openssh
         Add-Content -Path "$Env:GITHUB_ENV" -Value "PATH=$Env:PATH"
 
