@@ -1,0 +1,9 @@
+{
+  "name": "mixxx",
+  "version-string": "2.3",
+  "description": "DJ audio music mixing application",
+  "homepage": "https://mixxx.org",
+  "dependencies": [
+    "libebur128"
+  ]
+}

@@ -20,46 +20,9 @@ jobs:
             #  vcpkg_cache: /Users/runner/.cache/vcpkg/archives
             #  check_disk_space: df -h
     env:
-      VCPKG_PACKAGES: >-
-        angle
-        chromaprint
-        ffmpeg
-        fdk-aac
-        fftw3
-        hidapi
-        hss1394
-        libebur128
-        libflac
-        libid3tag
-        libkeyfinder
-        libmad
-        libmodplug
-        libogg
-        libopusenc
-        libshout
-        libsndfile
-        libusb
-        libvorbis
-        lilv
-        mp3lame
-        opus
-        opusfile
-        portaudio
-        portmidi
-        protobuf
-        pthreads
-        qt5-base
-        qt5-declarative
-        qt5-script
-        qt5-svg
-        qt5-translations
-        qt5-winextras
-        qtkeychain
-        rubberband
-        soundtouch
-        taglib
-        wavpack
       VCPKG_DEFAULT_TRIPLET: ${{ matrix.vcpkg_triplet }}
+      VCPKG_OVERLAY_PORTS: overlay/ports
+      VCPKG_FEATURE_FLAGS: manifests
       MIXXX_VERSION: 2.3
     name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
@@ -80,7 +43,7 @@ jobs:
     - name: Set up cache
       uses: actions/cache@v2
       with:
-        path: ${{ matrix.vcpkg_path }}/installed
+        path: ${{ matrix.vcpkg_path }}/vcpkg_installed
         key: vcpkg-installed-${{ matrix.vcpkg_triplet }}-${{ github.ref }}-${{ github.run_number }}
         restore-keys: |
           vcpkg-installed-${{ matrix.vcpkg_triplet }}-${{ github.ref }}
@@ -89,11 +52,13 @@ jobs:
     - name: Check available disk space
       run: ${{ matrix.check_disk_space }}
 
-    - name: Build packages
-      run: ./vcpkg upgrade --no-dry-run && ./vcpkg install --clean-after-build ${{ env.VCPKG_PACKAGES }}
+    - name: Upgrade packages
+      run: ./vcpkg upgrade --no-dry-run --x-install-root=vcpkg_installed
       working-directory: ${{ matrix.vcpkg_path }}
-      env:
-        VCPKG_OVERLAY_PORTS: overlay/ports
+
+    - name: Build packages
+      run: ./vcpkg install --clean-after-build
+      working-directory: ${{ matrix.vcpkg_path }}
 
     - name: Upload GitHub Actions artifacts of build logs
       if: always()
