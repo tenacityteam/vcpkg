@@ -1,3 +1,7 @@
+# build the dynamic only so the user can use either the stripped or unstripped 
+# version according to his patent or license rights
+vcpkg_check_linkage(ONLY_DYNAMIC_LIBRARY ONLY_DYNAMIC_CRT)
+
 vcpkg_check_features(OUT_FEATURE_OPTIONS FEATURE_OPTIONS
     he-aac HE_AAC
 )
