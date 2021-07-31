@@ -25,42 +25,7 @@ jobs:
             check_disk_space: df -h
     env:
       VCPKG_PACKAGES: >-
-        angle
-        chromaprint
-        fdk-aac
-        ffmpeg
-        fftw3
-        hidapi
-        hss1394
-        libebur128
-        libflac
-        libkeyfinder
-        libmodplug
-        libogg
-        libopusenc
-        libshout
-        libsndfile
-        libusb
-        libvorbis
-        lilv
-        mp3lame
-        opus
-        opusfile
         portaudio[asio]
-        portmidi
-        protobuf
-        pthreads
-        qt5-base
-        qt5-declarative
-        qt5-script
-        qt5-svg
-        qt5-translations
-        qtkeychain
-        rubberband
-        soundtouch
-        taglib
-        wavpack
-        ${{ matrix.vcpkg_packages_extras }}
       VCPKG_DEFAULT_TRIPLET: ${{ matrix.vcpkg_triplet }}
       # Using the relative path overlay/triplets does not work (https://github.com/microsoft/vcpkg/issues/18764)
       VCPKG_OVERLAY_TRIPLETS: ${{ matrix.vcpkg_path }}/overlay/triplets
