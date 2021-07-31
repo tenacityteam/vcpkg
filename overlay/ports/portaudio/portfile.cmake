@@ -9,6 +9,7 @@ vcpkg_from_github(
 
 vcpkg_check_features(OUT_FEATURE_OPTIONS FEATURE_OPTIONS FEATURES
     asio ASIO
+    jack JACK
 )
 
 vcpkg_cmake_configure(
