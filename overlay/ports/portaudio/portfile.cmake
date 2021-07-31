@@ -7,19 +7,20 @@ vcpkg_from_github(
     HEAD_REF cmake_rewrite
 )
 
-vcpkg_check_features(OUT_FEATURE_OPTIONS FEATURE_OPTIONS
+vcpkg_check_features(OUT_FEATURE_OPTIONS FEATURE_OPTIONS FEATURES
     asio ASIO
 )
 
-vcpkg_configure_cmake(
+vcpkg_cmake_configure(
     SOURCE_PATH ${SOURCE_PATH}
     OPTIONS ${FEATURE_OPTIONS}
+    # The ASIO variable is only used on Windows.
+    MAYBE_UNUSED_VARIABLES ASIO
     OPTIONS_DEBUG -DDEBUG_OUTPUT:BOOL=ON
-    PREFER_NINJA
 )
+vcpkg_cmake_install()
 
-vcpkg_install_cmake()
-vcpkg_fixup_cmake_targets(CONFIG_PATH lib/cmake/${PORT})
+vcpkg_cmake_config_fixup(CONFIG_PATH lib/cmake/${PORT})
 vcpkg_fixup_pkgconfig()
 vcpkg_copy_pdbs()
 
