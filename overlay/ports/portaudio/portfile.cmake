@@ -2,24 +2,26 @@ vcpkg_fail_port_install(ON_TARGET "uwp")
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO Be-ing/portaudio
-    REF 0f7ab8fe8b4ab73d9c301385d67eee367d4f3dcc
-    SHA512 9f75f579349d776c93538f3aa8f4133d148da53029c73bc7635e2a2191709389e29d1f492ae6063b0ae768d4ae0b28738f6fddc65256d3eb1ac31fbba2f9eded
+    REF 62455aa6b4791f714ab8c2f2857af54f93760115
+    SHA512 5864e4d36e2532fce1f79bfbbe6fef5304d45cf647e8413761f1b69cc3c7dbe87758c3c4a9a8d34290db92ebe6ca055755460b2db528cb8491cbe22b28304ca0
     HEAD_REF cmake_rewrite
 )
 
-vcpkg_check_features(OUT_FEATURE_OPTIONS FEATURE_OPTIONS
+vcpkg_check_features(OUT_FEATURE_OPTIONS FEATURE_OPTIONS FEATURES
     asio ASIO
+    jack JACK
 )
 
-vcpkg_configure_cmake(
+vcpkg_cmake_configure(
     SOURCE_PATH ${SOURCE_PATH}
     OPTIONS ${FEATURE_OPTIONS}
+    # The ASIO variable is only used on Windows.
+    MAYBE_UNUSED_VARIABLES ASIO
     OPTIONS_DEBUG -DDEBUG_OUTPUT:BOOL=ON
-    PREFER_NINJA
 )
+vcpkg_cmake_install()
 
-vcpkg_install_cmake()
-vcpkg_fixup_cmake_targets(CONFIG_PATH lib/cmake/${PORT})
+vcpkg_cmake_config_fixup(CONFIG_PATH lib/cmake/${PORT})
 vcpkg_fixup_pkgconfig()
 vcpkg_copy_pdbs()
 
