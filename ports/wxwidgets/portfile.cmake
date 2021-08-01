@@ -23,6 +23,10 @@ if(VCPKG_TARGET_ARCHITECTURE STREQUAL arm64 OR VCPKG_TARGET_ARCHITECTURE STREQUA
     )
 endif()
 
+vcpkg_check_features(OUT_FEATURE_OPTIONS FEATURE_OPTIONS FEATURES
+    stl wxUSE_STL
+)
+
 vcpkg_configure_cmake(
     SOURCE_PATH ${SOURCE_PATH}
     PREFER_NINJA
@@ -33,8 +37,8 @@ vcpkg_configure_cmake(
         -DwxUSE_LIBJPEG=sys
         -DwxUSE_LIBPNG=sys
         -DwxUSE_LIBTIFF=sys
-        -DwxUSE_STL=ON
         -DwxBUILD_DISABLE_PLATFORM_LIB_DIR=ON
+        ${FEATURE_OPTIONS}
         ${OPTIONS}
 )
 
