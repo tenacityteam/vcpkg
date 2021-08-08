@@ -1,8 +1,8 @@
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
-    REPO claytonotey/libsbsms
-    REF 2.3.0
-    SHA512 e5b544c2bdbaa2169236987c7a043838c8d1761b25280c476d7a32656d482c6485cb33f579ea9d1ce586ec7b2913ed8fdcf1abe5c7cc8b9e4eef9ce87de54627
+    REPO Be-ing/libsbsms
+    REF 626382565f2794afc782058f42b0bf250a8b2e56
+    SHA512 0ed4457a93d389cd72e283ff60938d6ae8f952c9c2b1fc1769f06e10bdd7947f3eeb6deefd655237ac3620cb5a411acc6ca4924c8b2bc293706aff9bfd30a72f
     HEAD_REF main
 )
 
