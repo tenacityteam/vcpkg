@@ -10,10 +10,5 @@
     "libpng",
     "tiff",
     "zlib"
-  ],
-  "features": {
-    "stl": {
-      "description": "Use wxUSE_STL build option."
-    }
-  }
+  ]
 }
