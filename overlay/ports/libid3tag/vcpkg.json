@@ -1,9 +1,17 @@
 {
   "name": "libid3tag",
-  "version-string": "0.15.1b",
-  "homepage": "https://www.underbit.com/products/mad/",
+  "version-string": "0.16.1",
+  "homepage": "https://github.com/tenacityteam/libid3tag",
   "description": "ID3 tag manipulation library",
   "dependencies": [
-      "zlib"
+    "zlib",
+    {
+      "name": "vcpkg-cmake",
+      "host": true
+    },
+    {
+      "name": "vcpkg-cmake-config",
+      "host": true
+    }
   ]
 }
