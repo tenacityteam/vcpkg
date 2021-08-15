@@ -1,33 +1,17 @@
-vcpkg_download_distfile(ARCHIVE
-    URLS "https://sourceforge.net/projects/mad/files/libid3tag/0.15.1b/libid3tag-0.15.1b.tar.gz"
-    FILENAME "libid3tag-0.15.1b.tar.gz"
-    SHA512 ade7ce2a43c3646b4c9fdc642095174b9d4938b078b205cd40906d525acd17e87ad76064054a961f391edcba6495441450af2f68be69f116549ca666b069e6d3
-)
-
-vcpkg_extract_source_archive_ex(
+vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
-    ARCHIVE ${ARCHIVE}
-    PATCHES
-        10_utf16.diff
-        11_unknown_encoding.diff
-        CVE-2008-2109.patch
+    REPO tenacityteam/libid3tag
+    REF 0.16.1
+    SHA512 621cbdf7a0ea5cdca6a9133c88fb07ff0c519ed73bc26a535de3928f4784b912bb44315b45362600d53cd03083b66f38d674d1880ca30e5f6c342321977a6eb2
+    HEAD_REF main
 )
 
-configure_file("${CMAKE_CURRENT_LIST_DIR}/CMakeLists.txt" "${SOURCE_PATH}/CMakeLists.txt" COPYONLY)
-configure_file("${CMAKE_CURRENT_LIST_DIR}/id3tagConfig.cmake.in" "${SOURCE_PATH}/id3tagConfig.cmake.in" COPYONLY)
+vcpkg_cmake_configure(SOURCE_PATH "${SOURCE_PATH}")
+vcpkg_cmake_install()
 
-vcpkg_configure_cmake(
-    SOURCE_PATH ${SOURCE_PATH}
-    PREFER_NINJA # Disable this option if project cannot be built with Ninja
-)
+vcpkg_cmake_config_fixup(CONFIG_PATH lib/cmake/id3tag)
+vcpkg_fixup_pkgconfig()
+vcpkg_copy_pdbs()
 
-vcpkg_install_cmake()
-
+file(INSTALL "${SOURCE_PATH}/COPYING" DESTINATION "${CURRENT_PACKAGES_DIR}/share/${PORT}" RENAME copyright)
 file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/debug/include")
-
-# Moves all .cmake files from /debug/share/libid3tag/ to /share/libid3tag/
-# See /docs/maintainers/vcpkg_fixup_cmake_targets.md for more details
-vcpkg_fixup_cmake_targets(CONFIG_PATH lib/cmake TARGET_PATH share/libid3tag)
-
-# Handle copyright
-file(INSTALL ${SOURCE_PATH}/COPYING DESTINATION ${CURRENT_PACKAGES_DIR}/share/libid3tag RENAME copyright)
