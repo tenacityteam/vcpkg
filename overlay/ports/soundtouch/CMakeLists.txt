@@ -1,13 +1,13 @@
 cmake_minimum_required(VERSION 3.5)
 project(soundtouch CXX)
 
-if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 8)
     set(ARCH_SUFFIX _x64)
 else()
     set(ARCH_SUFFIX)
 endif()
 
-if(BUILD_SHARED_LIBS)
+if(MSVC AND BUILD_SHARED_LIBS)
     set(TYPE_SUFFIX Dll)
 else()
     if($<Config:Debug>)
@@ -30,8 +30,27 @@ if(WIN32 AND BUILD_SHARED_LIBS)
     )
 endif()
 
+include(GNUInstallDirs)
+
 install(TARGETS libsoundtouch
-    RUNTIME DESTINATION bin
-    LIBRARY DESTINATION lib
-    ARCHIVE DESTINATION lib
+  ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+  LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+  RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
+  INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
 )
+
+install(
+    FILES
+        include/BPMDetect.h
+        include/FIFOSampleBuffer.h
+        include/FIFOSamplePipe.h
+        include/STTypes.h
+        include/SoundTouch.h
+        "${CMAKE_CURRENT_BINARY_DIR}/include/soundtouch_config.h"
+    DESTINATION
+        "${CMAKE_INSTALL_INCLUDEDIR}/soundtouch"
+)
+
+if(WIN32)
+    install(FILES source/SoundTouchDLL/SoundTouchDLL.h DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/soundtouch")
+endif()
