@@ -1,0 +1,24 @@
+{
+  "name": "twolame",
+  "version": "0.5",
+  "description": "TwoLAME is an optimized MPEG Audio Layer 2 (MP2) encoder",
+  "homepage": "https://twolame.org/",
+  "license": "LGPL-2.1-or-later",
+  "supports": "!uwp",
+  "dependencies": [
+    {
+      "name": "vcpkg-cmake",
+      "host": true
+    },
+    {
+      "name": "vcpkg-cmake-config",
+      "host": true
+    }
+  ],
+  "features": {
+    "executable": {
+      "description": "Build the twolame exectuable in addition to the libtwolame library.",
+      "dependencies": [ "libsndfile" ]
+    }
+  }
+}
