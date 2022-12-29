@@ -1,10 +1,7 @@
-vcpkg_fail_port_install(ON_TARGET "UWP")
-
-vcpkg_from_github(
+vcpkg_from_git(
     OUT_SOURCE_PATH SOURCE_PATH
-    REPO tenacityteam/portsmf
-    REF 239
-    SHA512 5908ef79043b44f90da8286d639a0693334f160454d206f4a212fe958a7a2e19cbc18e4240e191c1678690f34976c5e0d34dcb030d7bab007ee528fbb5e19486
+    URL https://codeberg.org/tenacityteam/portsmf
+    REF 951b636f7d0cba370d483a91f1897c71f3d98530
     HEAD_REF main
 )
 

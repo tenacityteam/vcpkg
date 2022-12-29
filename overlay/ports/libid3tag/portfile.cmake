@@ -1,8 +1,7 @@
-vcpkg_from_github(
+vcpkg_from_git(
     OUT_SOURCE_PATH SOURCE_PATH
-    REPO tenacityteam/libid3tag
-    REF 0.16.1
-    SHA512 621cbdf7a0ea5cdca6a9133c88fb07ff0c519ed73bc26a535de3928f4784b912bb44315b45362600d53cd03083b66f38d674d1880ca30e5f6c342321977a6eb2
+    URL https://codeberg.org/tenacityteam/libid3tag
+    REF 3df1882b76c2f44a274af1af33497125c95679b9
     HEAD_REF main
 )
 
