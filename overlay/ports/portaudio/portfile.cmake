@@ -1,10 +1,9 @@
-vcpkg_fail_port_install(ON_TARGET "uwp")
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
-    REPO Be-ing/portaudio
-    REF 3364bca3c01a0aedf64ba5a5abeb8e7019717ffc
-    SHA512 ce67f3e32cd55c02f4966735b39e329016a6723de3e8eedde87254df6b22a4eaa7f2fcc99729125a1baff52dea35cb4664a3dec26805fe75425a167371963aaf
-    HEAD_REF jack_windows
+    REPO PortAudio/portaudio
+    REF cb8d3dcbc6fa74c67f3e236be89b12d5630da141
+    SHA512 cec25a200e4edaa81a3a1d3142823f6297ea46950df2f850e06f6cee5c1a892509eacb80d01016c57746ea96fac1d60ee963cabb5982bb8436b930eb7a475415
+    HEAD_REF master
 )
 
 vcpkg_check_features(OUT_FEATURE_OPTIONS FEATURE_OPTIONS
