@@ -8,16 +8,16 @@ vcpkg_from_github(
 
 vcpkg_check_features(OUT_FEATURE_OPTIONS FEATURE_OPTIONS
   FEATURES
-    asio ASIO
-    jack JACK
+    asio PA_USE_ASIO
+    jack PA_USE_JACK
 )
 
 vcpkg_cmake_configure(
     SOURCE_PATH ${SOURCE_PATH}
     OPTIONS ${FEATURE_OPTIONS}
     # The ASIO variable is only used on Windows.
-    MAYBE_UNUSED_VARIABLES ASIO
-    OPTIONS_DEBUG -DDEBUG_OUTPUT:BOOL=ON
+    MAYBE_UNUSED_VARIABLES PA_USE_ASIO
+    OPTIONS_DEBUG -DPA_ENABLE_DEBUG_OUTPUT:BOOL=ON
 )
 vcpkg_cmake_install()
 
