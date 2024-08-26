@@ -1,8 +1,8 @@
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO PortAudio/portaudio
-    REF 8a9ebfd29f2818d6ce6e8b6c3b9e3cccce0e0691
-    SHA512 27f7e77eb2b3acb6001883c1a3de4b61aab07ee93872c0f2fcb00e14e3caf875688705cd8c7e4ec2d01e5cf81bcb854ac940f29448fcbd01bf08e164f5d3ccc3
+    REF 3beece1baedab8acd7084d028df781efacaf31c4
+    SHA512 abae154ee88d16e26d4faff6bb80a5b73fb24a960ffe3a86766220b98efdf650352a4e7673435074548361fb4746fe38ecf84fbf725cdddc4d36791afd05fa8b
     HEAD_REF master
 )
 
