@@ -123,7 +123,7 @@ $portData = @{
             "python3" = @{
                 "description"  = "Build Python3 bindings";
                 "supports"     = "!static";
-                "dependencies" = @(@{ "name" = "boost-python"; "features" = @( "python3" ); "platform" = "!uwp & !emscripten & !ios & !android" }, "python3");
+                "dependencies" = @(@{ "name" = "boost-python"; "platform" = "!uwp & !emscripten & !ios & !android" }, "python3");
             }
         }
     };
@@ -137,21 +137,7 @@ $portData = @{
         }
     };
     "boost-process"          = @{ "supports" = "!emscripten" };
-    "boost-python"           = @{
-        "default-features" = @("python3");
-        "supports"         = "!uwp & !emscripten & !ios & !android";
-        "features"         = @{
-            "python2" = @{
-                "description"  = "Build with Python2 support";
-                "supports"     = "!(arm & windows)";
-                "dependencies" = @("python2");
-            };
-            "python3" = @{
-                "description"  = "Build with Python3 support";
-                "dependencies" = @("python3");
-            }
-        }
-    };
+    "boost-python"           = @{ "supports" = "!uwp & !emscripten & !ios & !android"; "dependencies" = @("python3");};
     "boost-random"           = @{ "supports" = "!uwp" };
     "boost-regex"            = @{
         "features" = @{
@@ -161,7 +147,21 @@ $portData = @{
             }
         }
     }
-    "boost-stacktrace"       = @{ "supports" = "!uwp" };
+    "boost-stacktrace"       = @{
+        "default-features" = @(@{ "name" = "backtrace"; "platform" = "!windows" }; @{ "name" = "windbg"; "platform" = "windows" });
+        "supports"         = "!uwp";
+        "features"         = @{
+            "backtrace" = @{
+                "description"  = "Use boost_stacktrace_backtrace";
+                "supports"     = "!windows";
+                "dependencies" = @(@{ "name" = "libbacktrace"; "platform" = "!windows" });
+            };
+            "windbg" = @{
+                "description"  = "Use boost_stacktrace_windbg";
+                "supports"     = "windows";
+            };
+        }
+    };
     "boost-test"             = @{ "supports" = "!uwp" };
     "boost-wave"             = @{ "supports" = "!uwp" };
 }
