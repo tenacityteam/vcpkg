@@ -14,5 +14,12 @@
       "name": "vcpkg-cmake-config",
       "host": true
     }
-  ]
+  ],
+  "features": {
+    "asio": {
+      "description": "Enable ASIO backend",
+      "supports": "windows",
+      "dependencies": ["asiosdk"]
+    }
+  }
 }

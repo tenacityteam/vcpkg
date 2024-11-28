@@ -12,6 +12,12 @@ else()
     set(PA_BUILD_SHARED_LIBS OFF)
 endif()
 
+vcpkg_check_features(
+    OUT_FEATURE_OPTIONS FEATURE_OPTIONS
+    FEATURES
+        asio PA_USE_ASIO
+)
+
 # NOTE: the ASIO backend will be built automatically if the ASIO-SDK is provided
 # in a sibling folder of the portaudio source in vcpkg/buildtrees/portaudio/src
 vcpkg_cmake_configure(
@@ -23,6 +29,7 @@ vcpkg_cmake_configure(
         -DPA_USE_WMME=ON
         -DPA_BUILD_SHARED_LIBS=${PA_BUILD_SHARED_LIBS}
         -DPA_DLL_LINK_WITH_STATIC_RUNTIME=OFF
+        -DPA_USE_ASIO=${PA_USE_ASIO}
     OPTIONS_DEBUG
         -DPA_ENABLE_DEBUG_OUTPUT:BOOL=ON
 )
