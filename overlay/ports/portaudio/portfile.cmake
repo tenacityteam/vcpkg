@@ -1,22 +1,16 @@
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO PortAudio/portaudio
-    REF aa1cfb046f93b18db4d12986ddbff84cbaa952cb
-    SHA512 53c8f79878ae1ab2e65ad25a334c9e89a5278a38fe1e2fc434e72cc633cf742ae2a77bc3d38e34314f620d1c99697e2578b33ab54a81c47362d15be46166884c
-    HEAD_REF master
+    REF 147dd722548358763a8b649b3e4b41dfffbcfbb6
+    SHA512 0f56e5f5b004f51915f29771b8fc1fe886f1fef5d65ab5ea1db43f43c49917476b9eec14b36aa54d3e9fb4d8bdf61e68c79624d00b7e548d4c493395a758233a
+    PATCHES
+        fix-library-can-not-be-found.patch
+        framework_link.patch
+        wasapi-loopback.patch
 )
 
-if ("${VCPKG_LIBRARY_LINKAGE}" STREQUAL "dymamic")
-    set(PA_BUILD_SHARED_LIBS ON)
-else()
-    set(PA_BUILD_SHARED_LIBS OFF)
-endif()
-
-vcpkg_check_features(
-    OUT_FEATURE_OPTIONS FEATURE_OPTIONS
-    FEATURES
-        asio PA_USE_ASIO
-)
+string(COMPARE EQUAL "${VCPKG_LIBRARY_LINKAGE}" "dynamic" PA_BUILD_SHARED)
+string(COMPARE EQUAL "${VCPKG_LIBRARY_LINKAGE}" "static" PA_BUILD_STATIC)
 
 # NOTE: the ASIO backend will be built automatically if the ASIO-SDK is provided
 # in a sibling folder of the portaudio source in vcpkg/buildtrees/portaudio/src
@@ -27,9 +21,10 @@ vcpkg_cmake_configure(
         -DPA_USE_WASAPI=ON
         -DPA_USE_WDMKS=ON
         -DPA_USE_WMME=ON
-        -DPA_BUILD_SHARED_LIBS=${PA_BUILD_SHARED_LIBS}
+        -DPA_LIBNAME_ADD_SUFFIX=OFF
+        -DPA_BUILD_SHARED=${PA_BUILD_SHARED}
+        -DPA_BUILD_STATIC=${PA_BUILD_STATIC}
         -DPA_DLL_LINK_WITH_STATIC_RUNTIME=OFF
-        -DPA_USE_ASIO=${PA_USE_ASIO}
     OPTIONS_DEBUG
         -DPA_ENABLE_DEBUG_OUTPUT:BOOL=ON
 )
