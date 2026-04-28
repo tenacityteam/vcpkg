@@ -3097,7 +3097,7 @@
       "port-version": 0
     },
     "flint": {
-      "baseline": "3.4.0",
+      "baseline": "3.5.0",
       "port-version": 0
     },
     "fltk": {
@@ -6745,7 +6745,7 @@
       "port-version": 0
     },
     "msolve": {
-      "baseline": "0.9.4",
+      "baseline": "0.9.5",
       "port-version": 0
     },
     "msquic": {
