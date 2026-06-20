@@ -13,6 +13,11 @@ vcpkg_check_features(OUT_FEATURE_OPTIONS FEATURE_OPTIONS
         libunwind CPPTRACE_UNWIND_WITH_LIBUNWIND
 )
 
+vcpkg_check_features(OUT_FEATURE_OPTIONS FEATURE_OPTIONS
+    FEATURES
+        libunwind CPPTRACE_UNWIND_WITH_LIBUNWIND
+)
+
 vcpkg_cmake_configure(
     SOURCE_PATH "${SOURCE_PATH}"
     OPTIONS
