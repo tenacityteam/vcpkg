@@ -1,0 +1,67 @@
+diff --git i/include/wx/eventfilter.h w/include/wx/eventfilter.h
+index f105b0c..03acb69 100644
+--- i/include/wx/eventfilter.h
++++ w/include/wx/eventfilter.h
+@@ -33,25 +33,19 @@ public:
+ 
+         // Don't process the event normally at all.
+         Event_Ignore = 0,
+ 
+         // Event was already handled, don't process it normally.
+         Event_Processed = 1
+     };
+ 
+-    wxEventFilter()
+-    {
+-        m_next = nullptr;
+-    }
++    wxEventFilter();
+ 
+-    virtual ~wxEventFilter()
+-    {
+-        wxASSERT_MSG( !m_next, "Forgot to call wxEvtHandler::RemoveFilter()?" );
+-    }
++    virtual ~wxEventFilter();
+ 
+     // This method allows to filter all the events processed by the program, so
+     // you should try to return quickly from it to avoid slowing down the
+     // program to a crawl.
+     //
+     // Return value should be -1 to continue with the normal event processing,
+     // or true or false to stop further processing and pretend that the event
+     // had been already processed or won't be processed at all, respectively.
+diff --git i/src/common/event.cpp w/src/common/event.cpp
+index f670f83..63c9581 100644
+--- i/src/common/event.cpp
++++ w/src/common/event.cpp
+@@ -1178,16 +1178,30 @@ void wxEventHashTable::GrowEventTypeTable()
+         }
+ 
+         i++;
+     }
+ 
+     delete[] oldEventTypeTable;
+ }
+ 
++// ----------------------------------------------------------------------------
++// wxEventFilter
++// ----------------------------------------------------------------------------
++
++wxEventFilter::wxEventFilter()
++{
++    m_next = nullptr;
++}
++
++wxEventFilter::~wxEventFilter()
++{
++    wxASSERT_MSG( !m_next, "Forgot to call wxEvtHandler::RemoveFilter()?" );
++}
++
+ // ----------------------------------------------------------------------------
+ // wxEvtHandler
+ // ----------------------------------------------------------------------------
+ 
+ wxEvtHandler::wxEvtHandler()
+ {
+     m_nextHandler = nullptr;
+     m_previousHandler = nullptr;
