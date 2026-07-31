@@ -1,12 +1,13 @@
 # Overlay of the upstream soundtouch port. Codeberg's archive tarballs are not
 # byte-stable across Gitea versions, so vcpkg_from_github's hash check breaks
-# whenever Codeberg re-generates the archive.
+# whenever Codeberg re-generates the archive. We also mirror the git repo to
+# GitHub so builds don't depend on Codeberg's anti-abuse throttling.
 
 vcpkg_from_git(
     OUT_SOURCE_PATH SOURCE_PATH
-    URL https://codeberg.org/soundtouch/soundtouch.git
+    URL https://github.com/tenacityteam/soundtouch.git
     REF d994965fbbcf0f6ceeed0e72516968130c2912f0
-    FETCH_REF ${VERSION}
+    FETCH_REF refs/tags/${VERSION}
     HEAD_REF master
     PATCHES
         fix-install-includes.patch
