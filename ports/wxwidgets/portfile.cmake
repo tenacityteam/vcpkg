@@ -19,8 +19,8 @@ vcpkg_from_github(
 vcpkg_from_github(
     OUT_SOURCE_PATH lexilla_SOURCE_PATH
     REPO wxWidgets/lexilla
-    REF "27c20a6ae5eebf418debeac0166052ed6fb653bc"
-    SHA512 7e5de7f664509473b691af8261fca34c2687772faca7260eeba5f2984516e6f8edf88c27192e056c9dda996e2ad2c20f6d1dff1c4bd2f3c0d74852cb50ca424a
+    REF "bf6ad20062b98808ffa21419263942a427c150a9"
+    SHA512 08360fcd29e6c021857928375509ea48b9c8a02407bcb3c01865f57734c449fc6ff24afbe011f218b7145116e1805f8c9b4a2e3ec26f4a6298dca9453f610887
     HEAD_REF wx
 )
 file(COPY "${lexilla_SOURCE_PATH}/" DESTINATION "${SOURCE_PATH}/src/stc/lexilla")
@@ -65,6 +65,11 @@ if(VCPKG_TARGET_IS_WINDOWS OR VCPKG_TARGET_IS_OSX)
 else()
     list(APPEND OPTIONS -DwxUSE_WEBREQUEST_CURL=ON)
 endif()
+
+# Prefer copies over symlinks for the wx-config / wxrc install artifacts.
+# On Windows symlinks require admin; on any platform vcpkg expects real files
+# in its install tree so downstream relocation works.
+list(APPEND OPTIONS -DwxBUILD_INSTALL_USE_SYMLINK=OFF)
 
 if(VCPKG_TARGET_IS_WINDOWS)
     if(VCPKG_CRT_LINKAGE STREQUAL "dynamic")
@@ -128,7 +133,7 @@ vcpkg_cmake_configure(
 )
 
 vcpkg_cmake_install()
-vcpkg_cmake_config_fixup(CONFIG_PATH lib/cmake/wxWidgets)
+vcpkg_cmake_config_fixup(CONFIG_PATH lib/cmake/wxWidgets-3.3)
 
 # The CMake export is not ready for use: It lacks a config file.
 file(REMOVE_RECURSE
