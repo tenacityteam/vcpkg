@@ -1,0 +1,464 @@
+[libid3tag] Fix latin1 integer overflow on 64-bit Windows
+
+id3_parse_latin1() sizes its copy with malloc(length + 1), and
+id3_length_t is unsigned long, which is still 32 bits on Win64. A
+compressed ID3v2.3 frame carries a plain 32-bit decoded size, so ~4 MB
+of deflated non-NUL bytes in a URL/UFID/PRIV/POPM frame hands it a
+length of 0xFFFFFFFF, the + 1 wraps to malloc(0), and the memcpy()
+writes 4 GiB past a 1-byte buffer. Tenacity hits this parsing the ID3
+chunk of any imported WAV/AIFF. Linux and macOS have a 64-bit long so
+they don't wrap, and 32-bit builds can't allocate the decompression
+buffer in the first place.
+
+Add id3_util_stralloc(), which does the math in size_t and returns NULL
+instead of wrapping, and use it for that allocation. Move the rest of
+the (length + 1) * sizeof() allocations in the latin1/utf16/utf8
+decoders over to it too; none of those are known to be reachable with
+a wrapping length, but there's no reason to leave the pattern around.
+
+Bound the legacy TCON "(nn)" scan in translate_TCON() by the decoded
+string's end as well. The NUL terminator already stops it, so behavior
+doesn't change.
+
+Reported by Osvaldo Janeri Filho through responsible disclosure.
+
+Signed-off-by: Emily Mabrey <emilymabrey93@gmail.com>
+
+diff --git a/compat.c b/compat.c
+index 48d486a..443325f 100644
+--- a/compat.c
++++ b/compat.c
+@@ -336,44 +336,46 @@ id3_compat_lookup (str, len)
+ 
+ 
+ static
+ int translate_TCON(struct id3_frame *frame, char const *oldid,
+ 		   id3_byte_t const *data, id3_length_t length)
+ {
+   id3_byte_t const *end;
+   enum id3_field_textencoding encoding;
+-  id3_ucs4_t *string = 0, *ptr, *endptr;
++  id3_ucs4_t *string = 0, *ptr, *endptr, *strend;
+   int result = 0;
+ 
+   /* translate old TCON syntax into multiple strings */
+ 
+   assert(frame->nfields == 2);
+ 
+   encoding = ID3_FIELD_TEXTENCODING_ISO_8859_1;
+ 
+   end = data + length;
+ 
+   if (id3_field_parse(&frame->fields[0], &data, end - data, &encoding) == -1)
+     goto fail;
+ 
+   string = id3_parse_string(&data, end - data, encoding, 0);
+   if (string == 0)
+     goto fail;
+ 
+-  ptr = string;
++  ptr    = string;
++  strend = string + id3_ucs4_length(string);
++
+   while (*ptr == '(') {
+     if (*++ptr == '(')
+       break;
+ 
+     endptr = ptr;
+-    while (*endptr && *endptr != ')')
++    while (endptr < strend && *endptr != ')')
+       ++endptr;
+ 
+-    if (*endptr)
++    if (endptr < strend)
+       *endptr++ = 0;
+ 
+     if (id3_field_addstring(&frame->fields[1], ptr) == -1)
+       goto fail;
+ 
+     ptr = endptr;
+   }
+ 
+diff --git a/compat.gperf b/compat.gperf
+index d53d40a..55acf10 100644
+--- a/compat.gperf
++++ b/compat.gperf
+@@ -130,44 +130,46 @@ WXX,  EQ(WXXX)  /* User defined URL link frame */
+ %%
+ 
+ static
+ int translate_TCON(struct id3_frame *frame, char const *oldid,
+ 		   id3_byte_t const *data, id3_length_t length)
+ {
+   id3_byte_t const *end;
+   enum id3_field_textencoding encoding;
+-  id3_ucs4_t *string = 0, *ptr, *endptr;
++  id3_ucs4_t *string = 0, *ptr, *endptr, *strend;
+   int result = 0;
+ 
+   /* translate old TCON syntax into multiple strings */
+ 
+   assert(frame->nfields == 2);
+ 
+   encoding = ID3_FIELD_TEXTENCODING_ISO_8859_1;
+ 
+   end = data + length;
+ 
+   if (id3_field_parse(&frame->fields[0], &data, end - data, &encoding) == -1)
+     goto fail;
+ 
+   string = id3_parse_string(&data, end - data, encoding, 0);
+   if (string == 0)
+     goto fail;
+ 
+-  ptr = string;
++  ptr    = string;
++  strend = string + id3_ucs4_length(string);
++
+   while (*ptr == '(') {
+     if (*++ptr == '(')
+       break;
+ 
+     endptr = ptr;
+-    while (*endptr && *endptr != ')')
++    while (endptr < strend && *endptr != ')')
+       ++endptr;
+ 
+-    if (*endptr)
++    if (endptr < strend)
+       *endptr++ = 0;
+ 
+     if (id3_field_addstring(&frame->fields[1], ptr) == -1)
+       goto fail;
+ 
+     ptr = endptr;
+   }
+ 
+diff --git a/latin1.c b/latin1.c
+index 3bba895..c3cb8e4 100644
+--- a/latin1.c
++++ b/latin1.c
+@@ -20,16 +20,17 @@
+  */
+ 
+ # include "global.h"
+ 
+ # include <stdlib.h>
+ 
+ # include "id3tag.h"
+ # include "latin1.h"
++# include "util.h"
+ # include "ucs4.h"
+ 
+ /*
+  * NAME:	latin1->length()
+  * DESCRIPTION:	return the number of ucs4 chars represented by a latin1 string
+  */
+ id3_length_t id3_latin1_length(id3_latin1_t const *latin1)
+ {
+@@ -78,17 +79,17 @@ id3_latin1_t *id3_latin1_duplicate(id3_latin1_t const *src)
+ /*
+  * NAME:	latin1->ucs4duplicate()
+  * DESCRIPTION:	duplicate and decode a latin1 string into ucs4
+  */
+ id3_ucs4_t *id3_latin1_ucs4duplicate(id3_latin1_t const *latin1)
+ {
+   id3_ucs4_t *ucs4;
+ 
+-  ucs4 = malloc((id3_latin1_length(latin1) + 1) * sizeof(*ucs4));
++  ucs4 = id3_util_stralloc(id3_latin1_length(latin1), sizeof(*ucs4));
+   if (ucs4)
+     id3_latin1_decode(latin1, ucs4);
+ 
+   return release(ucs4);
+ }
+ 
+ /*
+  * NAME:	latin1->decodechar()
+@@ -188,26 +189,26 @@ id3_length_t id3_latin1_serialize(id3_byte_t **ptr, id3_ucs4_t const *ucs4,
+ id3_ucs4_t *id3_latin1_deserialize(id3_byte_t const **ptr, id3_length_t length)
+ {
+   id3_byte_t const *end;
+   id3_latin1_t *latin1ptr, *latin1;
+   id3_ucs4_t *ucs4;
+ 
+   end = *ptr + length;
+ 
+-  latin1 = malloc((length + 1) * sizeof(*latin1));
++  latin1 = id3_util_stralloc(length, sizeof(*latin1));
+   if (latin1 == 0)
+     return 0;
+ 
+   latin1ptr = latin1;
+   while (end - *ptr > 0 && (*latin1ptr = id3_latin1_get(ptr)))
+     ++latin1ptr;
+ 
+   *latin1ptr = 0;
+ 
+-  ucs4 = malloc((id3_latin1_length(latin1) + 1) * sizeof(*ucs4));
++  ucs4 = id3_util_stralloc(id3_latin1_length(latin1), sizeof(*ucs4));
+   if (ucs4)
+     id3_latin1_decode(latin1, ucs4);
+ 
+   free(latin1);
+ 
+   return ucs4;
+ }
+diff --git a/parse.c b/parse.c
+index deb0053..a75d592 100644
+--- a/parse.c
++++ b/parse.c
+@@ -28,16 +28,17 @@
+ # include <stdlib.h>
+ # include <string.h>
+ 
+ # include "id3tag.h"
+ # include "parse.h"
+ # include "latin1.h"
+ # include "utf16.h"
+ # include "utf8.h"
++# include "util.h"
+ 
+ signed long id3_parse_int(id3_byte_t const **ptr, unsigned int bytes)
+ {
+   signed long value = 0;
+ 
+   assert(bytes >= 1 && bytes <= 4);
+ 
+   if (**ptr & 0x80)
+@@ -116,17 +117,17 @@ id3_latin1_t *id3_parse_latin1(id3_byte_t const **ptr, id3_length_t length,
+   end = memchr(*ptr, 0, length);
+   if (end == 0)
+     end = *ptr + length;
+   else {
+     length = end - *ptr;
+     terminated = 1;
+   }
+ 
+-  latin1 = malloc(length + 1);
++  latin1 = id3_util_stralloc(length, sizeof(*latin1));
+   if (latin1) {
+     memcpy(latin1, *ptr, length);
+     latin1[length] = 0;
+ 
+     if (!full) {
+       id3_latin1_t *check;
+ 
+       for (check = latin1; *check; ++check) {
+diff --git a/utf16.c b/utf16.c
+index f451df3..a2ad4d1 100644
+--- a/utf16.c
++++ b/utf16.c
+@@ -20,16 +20,17 @@
+  */
+ 
+ # include "global.h"
+ 
+ # include <stdlib.h>
+ 
+ # include "id3tag.h"
+ # include "utf16.h"
++# include "util.h"
+ # include "ucs4.h"
+ 
+ /*
+  * NAME:	utf16->length()
+  * DESCRIPTION:	return the number of ucs4 chars represented by a utf16 string
+  */
+ id3_length_t id3_utf16_length(id3_utf16_t const *utf16)
+ {
+@@ -67,17 +68,17 @@ id3_length_t id3_utf16_size(id3_utf16_t const *utf16)
+ /*
+  * NAME:	utf16->ucs4duplicate()
+  * DESCRIPTION:	duplicate and decode a utf16 string into ucs4
+  */
+ id3_ucs4_t *id3_utf16_ucs4duplicate(id3_utf16_t const *utf16)
+ {
+   id3_ucs4_t *ucs4;
+ 
+-  ucs4 = malloc((id3_utf16_length(utf16) + 1) * sizeof(*ucs4));
++  ucs4 = id3_util_stralloc(id3_utf16_length(utf16), sizeof(*ucs4));
+   if (ucs4)
+     id3_utf16_decode(utf16, ucs4);
+ 
+   return release(ucs4);
+ }
+ 
+ /*
+  * NAME:	utf16->decodechar()
+@@ -244,17 +245,17 @@ id3_ucs4_t *id3_utf16_deserialize(id3_byte_t const **ptr, id3_length_t length,
+   id3_byte_t const *end;
+   id3_utf16_t *utf16ptr, *utf16;
+   id3_ucs4_t *ucs4;
+ 
+   end = *ptr + (length & ~1);
+   if (end == *ptr)
+     return 0;
+ 
+-  utf16 = malloc((length / 2 + 1) * sizeof(*utf16));
++  utf16 = id3_util_stralloc(length / 2, sizeof(*utf16));
+   if (utf16 == 0)
+     return 0;
+ 
+   if (byteorder == ID3_UTF16_BYTEORDER_ANY && end - *ptr > 0) {
+     switch (((*ptr)[0] << 8) |
+ 	    ((*ptr)[1] << 0)) {
+     case 0xfeff:
+       byteorder = ID3_UTF16_BYTEORDER_BE;
+@@ -269,17 +270,17 @@ id3_ucs4_t *id3_utf16_deserialize(id3_byte_t const **ptr, id3_length_t length,
+   }
+ 
+   utf16ptr = utf16;
+   while (end - *ptr > 0 && (*utf16ptr = id3_utf16_get(ptr, byteorder)))
+     ++utf16ptr;
+ 
+   *utf16ptr = 0;
+ 
+-  ucs4 = malloc((id3_utf16_length(utf16) + 1) * sizeof(*ucs4));
++  ucs4 = id3_util_stralloc(id3_utf16_length(utf16), sizeof(*ucs4));
+   if (ucs4)
+     id3_utf16_decode(utf16, ucs4);
+ 
+   free(utf16);
+ 
+   if (end == *ptr && length % 2 != 0)
+   {
+      /* We were called with a bogus length.  It should always
+diff --git a/utf8.c b/utf8.c
+index 457adf7..3464310 100644
+--- a/utf8.c
++++ b/utf8.c
+@@ -20,16 +20,17 @@
+  */
+ 
+ # include "global.h"
+ 
+ # include <stdlib.h>
+ 
+ # include "id3tag.h"
+ # include "utf8.h"
++# include "util.h"
+ # include "ucs4.h"
+ 
+ /*
+  * NAME:	utf8->length()
+  * DESCRIPTION:	return the number of ucs4 chars represented by a utf8 string
+  */
+ id3_length_t id3_utf8_length(id3_utf8_t const *utf8)
+ {
+@@ -111,17 +112,17 @@ id3_length_t id3_utf8_size(id3_utf8_t const *utf8)
+ /*
+  * NAME:	utf8->ucs4duplicate()
+  * DESCRIPTION:	duplicate and decode a utf8 string into ucs4
+  */
+ id3_ucs4_t *id3_utf8_ucs4duplicate(id3_utf8_t const *utf8)
+ {
+   id3_ucs4_t *ucs4;
+ 
+-  ucs4 = malloc((id3_utf8_length(utf8) + 1) * sizeof(*ucs4));
++  ucs4 = id3_util_stralloc(id3_utf8_length(utf8), sizeof(*ucs4));
+   if (ucs4)
+     id3_utf8_decode(utf8, ucs4);
+ 
+   return release(ucs4);
+ }
+ 
+ /*
+  * NAME:	utf8->decodechar()
+@@ -336,26 +337,26 @@ id3_length_t id3_utf8_serialize(id3_byte_t **ptr, id3_ucs4_t const *ucs4,
+ id3_ucs4_t *id3_utf8_deserialize(id3_byte_t const **ptr, id3_length_t length)
+ {
+   id3_byte_t const *end;
+   id3_utf8_t *utf8ptr, *utf8;
+   id3_ucs4_t *ucs4;
+ 
+   end = *ptr + length;
+ 
+-  utf8 = malloc((length + 1) * sizeof(*utf8));
++  utf8 = id3_util_stralloc(length, sizeof(*utf8));
+   if (utf8 == 0)
+     return 0;
+ 
+   utf8ptr = utf8;
+   while (end - *ptr > 0 && (*utf8ptr = id3_utf8_get(ptr)))
+     ++utf8ptr;
+ 
+   *utf8ptr = 0;
+ 
+-  ucs4 = malloc((id3_utf8_length(utf8) + 1) * sizeof(*ucs4));
++  ucs4 = id3_util_stralloc(id3_utf8_length(utf8), sizeof(*ucs4));
+   if (ucs4)
+     id3_utf8_decode(utf8, ucs4);
+ 
+   free(utf8);
+ 
+   return ucs4;
+ }
+diff --git a/util.c b/util.c
+index 9bdf596..d926cd3 100644
+--- a/util.c
++++ b/util.c
+@@ -16,22 +16,36 @@
+  * along with this program; if not, write to the Free Software
+  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  *
+  * $Id: util.c,v 1.9 2004/01/23 09:41:32 rob Exp $
+  */
+ 
+ # include "global.h"
+ 
++# include <stdint.h>
+ # include <stdlib.h>
+ # include <zlib.h>
+ 
+ # include "id3tag.h"
+ # include "util.h"
+ 
++/*
++ * NAME:	util->stralloc()
++ * DESCRIPTION:	allocate room for length elements of the given size plus a
++ *		terminator, failing instead of overflowing the size computation
++ */
++void *id3_util_stralloc(id3_length_t length, size_t size)
++{
++  if (size == 0 || length >= SIZE_MAX / size)
++    return 0;
++
++  return malloc(((size_t) length + 1) * size);
++}
++
+ /*
+  * NAME:	util->unsynchronise()
+  * DESCRIPTION:	perform (in-place) unsynchronisation
+  */
+ id3_length_t id3_util_unsynchronise(id3_byte_t *data, id3_length_t length)
+ {
+   id3_length_t bytes = 0, count;
+   id3_byte_t *end = data + length;
+diff --git a/util.h b/util.h
+index 4b895d2..d2429fb 100644
+--- a/util.h
++++ b/util.h
+@@ -17,18 +17,22 @@
+  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  *
+  * $Id: util.h,v 1.6 2004/01/23 09:41:32 rob Exp $
+  */
+ 
+ # ifndef LIBID3TAG_UTIL_H
+ # define LIBID3TAG_UTIL_H
+ 
++# include <stddef.h>
++
+ # include "id3tag.h"
+ 
++void *id3_util_stralloc(id3_length_t, size_t);
++
+ id3_length_t id3_util_unsynchronise(id3_byte_t *, id3_length_t);
+ id3_length_t id3_util_deunsynchronise(id3_byte_t *, id3_length_t);
+ 
+ id3_byte_t *id3_util_compress(id3_byte_t const *, id3_length_t,
+ 			      id3_length_t *);
+ id3_byte_t *id3_util_decompress(id3_byte_t const *, id3_length_t,
+ 				id3_length_t);
+ 
